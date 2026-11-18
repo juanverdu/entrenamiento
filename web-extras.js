@@ -27,7 +27,7 @@
       ${standalone ? '' : `<div class="slot"><span class="label">Instálala en el iPhone</span>
         <p style="font-size:14px">En Safari, pulsa el botón de compartir y elige <b>«Añadir a pantalla de inicio»</b>. Se abrirá a pantalla completa, como una app, y no caduca.</p></div>`}
       <div class="slot"><span class="label">Tus datos</span>
-        <p style="font-size:14px">Se guardan solo en este iPhone. Haz una copia de vez en cuando con «Descargar copia completa» (más arriba, en Tus datos) y guárdala en Archivos o iCloud Drive.</p></div>
+        <p style="font-size:14px">Se guardan solo en este iPhone. Haz una copia de vez en cuando con «Descargar copia completa» (más arriba, en Tu perfil y copias) y guárdala en Archivos o iCloud Drive.</p></div>
       <div class="slot"><span class="label">Pasar datos de otra libreta</span>
         <p style="font-size:14px">Elige una copia descargada de la libreta de claude.ai o de la app de Xcode. Las fotos no se pasan: vuelve a hacer las de las máquinas y las de progreso.</p>
         <div class="row"><span class="btn photo-btn">${busy || 'Importar copia'}<input type="file" id="natImport" accept=".json,application/json"></span></div></div>
@@ -38,8 +38,8 @@
         <p style="font-size:14px">La versión web no puede leer la app Salud. Apunta los pasos del día en Hoy (los ves en Salud → Pasos).</p></div>
     </div>`;
   }
-  const origPlan = vPlan;
-  vPlan = function () { return origPlan().replace(/<\/section>\s*$/, card() + '</section>'); };
+  const origAj = vAjustes;
+  vAjustes = function () { return origAj().replace(/<\/section>\s*$/, card() + '</section>'); };
 
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-nat]'); if (!b) return;

@@ -120,7 +120,7 @@
   const blobToB64 = (blob) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
   async function ask(prompt, opts) {
     const key = apiKey();
-    if (!key) { const e = new Error('Añade tu clave de la API de Anthropic en Plan → Ajustes de la app para usar esta función.'); e.code = 'not_granted'; throw e; }
+    if (!key) { const e = new Error('Añade tu clave de la API de Anthropic en Ajustes (el engranaje de arriba) para usar esta función.'); e.code = 'not_granted'; throw e; }
     const content = [];
     for (const img of (opts && opts.images) || []) content.push({ type: 'image', source: { type: 'base64', media_type: img.type && img.type.startsWith('image/') ? img.type : 'image/jpeg', data: await blobToB64(img) } });
     content.push({ type: 'text', text: prompt });
@@ -129,7 +129,7 @@
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL, max_tokens: 1024, messages: [{ role: 'user', content }] }),
     });
-    if (!res.ok) { const e = new Error(res.status === 401 ? 'La clave de la API no es válida. Revísala en Plan → Ajustes de la app.' : 'Claude no ha respondido (error ' + res.status + ').'); e.code = res.status === 401 ? 'not_granted' : res.status === 429 ? 'rate_limited' : 'error'; throw e; }
+    if (!res.ok) { const e = new Error(res.status === 401 ? 'La clave de la API no es válida. Revísala en Ajustes (el engranaje de arriba).' : 'Claude no ha respondido (error ' + res.status + ').'); e.code = res.status === 401 ? 'not_granted' : res.status === 429 ? 'rate_limited' : 'error'; throw e; }
     const j = await res.json();
     return (j.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
   }

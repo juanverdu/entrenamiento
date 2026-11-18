@@ -4,6 +4,7 @@
   'use strict';
   if (!window.WEB_APP) return;
   const standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  const APP_VERSION = '5 · 18 nov';
   let busy = '';
 
   /* ---------- Avisos en el móvil con la app ntfy (gratis, sin cuenta) ---------- */
@@ -89,6 +90,7 @@
         <form id="natKeyForm" class="row"><div class="field" style="flex:1;min-width:0"><label class="label" for="natKey">Clave de la API</label><input id="natKey" type="password" autocomplete="off" placeholder="${key ? '•••••••• (guardada)' : 'sk-ant-…'}"></div><button class="btn" style="align-self:end">Guardar</button>${key ? '<button type="button" class="btn ghost" style="align-self:end" data-nat="key-del">Borrar</button>' : ''}</form></div>
       <div class="slot"><span class="label">Pasos</span>
         <p style="font-size:14px">La versión web no puede leer la app Salud. Apunta los pasos del día en Hoy (los ves en Salud → Pasos).</p></div>
+      <p class="muted" style="font-size:12px;margin:0">Versión ${APP_VERSION}</p>
     </div>`;
   }
   const origAj = vAjustes;

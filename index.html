@@ -320,6 +320,23 @@ tr.now td{background:var(--accent-soft)}
 ul.clean{margin:0;padding-left:18px;display:grid;gap:4px}
 @media (prefers-reduced-motion:no-preference){.progress-bar i,.mbar .track i{transition:width .3s}}
 .session-title .acc{color:var(--accent)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .cl{font-size:11px;text-align:center;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cal .cd{aspect-ratio:1;border:1px solid var(--line);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--f-mono);font-size:13px;background:var(--sunk)}
+.cal .cd.empty{border:0;background:none}
+.cal .cd.tr{background:var(--accent);border-color:var(--accent);color:#fff}
+.cal .cd.now{box-shadow:inset 0 0 0 2px var(--ink)}
+.cal .cd.fut{opacity:.45}
+.cal .cd b{font-weight:500}
+.cal .cd i,.cal-legend .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.cal i.ok,.cal-legend .dot.ok{background:var(--ok)} .cal .cd.tr i.ok{background:#fff}
+.cal i.over,.cal-legend .dot.over{background:var(--warn)} .cal .cd.tr i.over{background:#0F1312}
+.cal-legend{gap:6px 16px;font-size:12px;color:var(--muted)} .cal-legend span{display:inline-flex;align-items:center;gap:6px}
+.cal-legend .sq{width:12px;height:12px;border-radius:3px;background:var(--accent);display:inline-block}
+.goal{display:grid;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)} .goal:last-of-type{border-bottom:0}
+.ok-t{color:var(--ok)}
+.prep{display:grid;gap:8px;align-content:start}
+.prep-t{display:grid;gap:2px;font-size:14px;padding-top:8px;border-top:1px solid var(--line)} .prep-t span{color:var(--muted)}
 .kseg{display:grid;gap:8px}
 .kseg-t{font-family:var(--f-display);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.04em}
 .kseg-v{font-family:var(--f-mono);font-size:22px}.kseg-v small{font-size:14px;color:var(--muted)}
@@ -465,6 +482,22 @@ const FREE = {free:true, t:'Cena libre', d:'Lo que te apetezca, con cabeza: que 
 const TRAIN_EXTRA = 'Si entrenas ese día, añade un extra de unas 300 kcal: un yogur proteico, una pieza de fruta y un puñado (20 g) de frutos secos. Si tu merienda ya es el batido, el extra es el yogur con fruta.';
 const MENU_FROM = '2026-11-16';
 MEALS.Extra=[{k:'extra_entreno', t:'Extra de día de entreno', d:'1 yogur alto en proteína · 1 pieza de fruta · 20 g de frutos secos', kcal:280, p:16, c:27, f:10}];
+/* Preparación de tuppers para el menú actual (se actualiza con cada menú nuevo) */
+const PREP = [
+ {when:'Domingo', title:'Cocina para lunes, martes y miércoles', time:'≈ 1 h 15 min', tasks:[
+  ['Arroz','Cuece 220 g en crudo: 75 g para el arroz con pollo del lunes, 75 g para el del viernes y 70 g para la merluza del martes.'],
+  ['Pollo a la plancha','490 g de pechuga: 340 g en dados para los dos arroces y 150 g en tiras para el wrap del lunes.'],
+  ['Verduras salteadas','400 g de pimiento, cebolla y champiñones con 10 g de AOVE. La mitad va al arroz del lunes y la otra mitad al del viernes.'],
+  ['Lentejas con pollo','120 g de lentejas en crudo, 260 g de pollo, zanahoria, cebolla y pimiento. Salen 2 tuppers: martes y sábado.'],
+  ['Pasta','75 g en crudo para la ensalada del miércoles. Guárdala sin aliñar y añade el atún, el maíz y el tomate el miércoles por la mañana.'],
+  ['Al congelador','El arroz con pollo del viernes y las lentejas del sábado. Así no pasan más de 3 días en la nevera.']]},
+ {when:'Miércoles por la noche', title:'Cocina para jueves', time:'≈ 40 min', tasks:[
+  ['Pollo con patatas al horno','180 g de pechuga o contramuslo y 250 g de patata a 200 °C unos 35 min. Es la comida del jueves.'],
+  ['Pollo para el wrap','150 g a la plancha para la cena del jueves.']]},
+ {when:'Jueves y viernes por la noche', title:'Pasa del congelador a la nevera', time:'1 min', tasks:[
+  ['Jueves','Saca el arroz con pollo del viernes.'],
+  ['Viernes','Saca las lentejas del sábado.']]},
+];
 const WEEK = [
  {d:'Lunes', m:['batido_fruta','arroz_pollo','bocata_atun','wrap']},
  {d:'Martes', m:['yogur_tortitas','lentejas','yogur_liquido_fruta','merluza']},
@@ -505,6 +538,7 @@ let mealDate = today();
 let armed = null;           // botón de borrar armado
 let photoPose = 'frente';
 let cmpA = null, cmpB = null;
+let calMonth = null;
 let openEx = null, lastOpen = null, scrollEx = null, swapOpen = null;
 const todayIdx = ()=>(new Date().getDay()+6)%7;
 
@@ -1208,6 +1242,12 @@ function vPlan(){
     </div>
 
     <div class="card">
+      <div><div class="label">Para el menú desde el ${fmtDate(MENU_FROM)}</div><h3>Prepara tus tuppers</h3></div>
+      <p class="muted" style="max-width:70ch">Cocina en dos tandas y tendrás las comidas listas para llevar. Deja enfriar antes de cerrar los tuppers y mételos en la nevera en menos de 2 horas. Lo cocinado aguanta 3 días en la nevera; lo de más días, al congelador. El desayuno, la merienda, la merluza del martes, la hamburguesa del miércoles y la pasta del domingo se preparan en el momento.</p>
+      <div class="grid3">${PREP.map(b=>`<div class="slot prep"><div class="row between"><span class="label">${esc(b.when)}</span><span class="chip">${esc(b.time)}</span></div><b>${esc(b.title)}</b>${b.tasks.map(([t,d])=>`<div class="prep-t"><b>${esc(t)}</b><span>${esc(d)}</span></div>`).join('')}</div>`).join('')}</div>
+    </div>
+
+    <div class="card">
       <h3>Qué comer</h3>
       <p class="muted" style="max-width:70ch">Desayunos pensados para llevar al trabajo en una bolsa: un bocadillo o wrap envuelto y algo que ya viene envasado. Meriendas sin preparar nada: todo viene envasado. Cuatro comidas al día, sin saltarte la merienda: es la que te asegura llegar a la proteína. Puedes cambiar una opción por otra de la misma franja. ${TRAIN_EXTRA} Nada de coliflor, berenjena, boniato ni brócoli. Dime en el chat lo que no te guste y lo cambio.</p>
       <div class="grid2">${SLOTS.slice(0,4).map(sl=>`<div class="slot"><span class="label">${sl}</span>${MEALS[sl].map(m=>`<div class="meal-opt"><span class="t">${esc(m.t)}</span><span class="d">${esc(m.d)}</span><span class="m">${m.kcal} kcal · ${m.p} P · ${m.c} C · ${m.f} G</span></div>`).join('')}</div>`).join('')}</div>
@@ -1244,6 +1284,8 @@ function vAjustes(){
           <div class="field"><label class="label" for="pfH">Estatura (cm)</label><input id="pfH" inputmode="decimal" value="${esc(p.height)}"></div>
           <div class="field"><label class="label" for="pfB">Nacimiento</label><input id="pfB" type="date" value="${esc(p.birth)}"></div>
           <div class="field"><label class="label" for="pfS">Inicio del plan</label><input id="pfS" type="date" value="${esc(p.start)}"></div>
+          <div class="field"><label class="label" for="pfGK">Peso objetivo (kg)</label><input id="pfGK" inputmode="decimal" placeholder="78" value="${esc(p.goalKg??'')}"></div>
+          <div class="field"><label class="label" for="pfGW">Cintura objetivo (cm)</label><input id="pfGW" inputmode="decimal" placeholder="84" value="${esc(p.goalWaist??'')}"></div>
           <button class="btn primary" style="align-self:end">Guardar datos</button>
         </form>
         <div class="slot"><span class="label">Copia de seguridad</span>
@@ -1253,6 +1295,47 @@ function vAjustes(){
       </div>
     </div>
   </section>`;
+}
+function dayKcalState(d){ const l=mealsOn(d); if(!l.length) return ''; const t=totals(l).kcal; const tg=(isTrainDay(d)?TARGETS.train:TARGETS.rest).kcal; return t>tg*1.1?'over':'ok' }
+function calCard(){
+  const m=calMonth||today().slice(0,7); const [y,mo]=m.split('-').map(Number);
+  const first=new Date(y,mo-1,1), days=new Date(y,mo,0).getDate(), lead=(first.getDay()+6)%7;
+  let tr=0, ok=0, over=0; const cells=[];
+  for(let i=0;i<lead;i++) cells.push('<span class="cd empty"></span>');
+  for(let d=1; d<=days; d++){ const ds=m+'-'+z(d); const t=isTrainDay(ds), k=dayKcalState(ds), fut=ds>today();
+    if(t) tr++; if(k==='ok') ok++; if(k==='over') over++;
+    cells.push(`<span class="cd ${t?'tr':''} ${ds===today()?'now':''} ${fut?'fut':''}" title="${fmtDate(ds)}${t?' · entreno':''}${k==='ok'?' · calorías bien':k==='over'?' · te pasaste':''}"><b>${d}</b>${k?`<i class="${k}"></i>`:''}</span>`) }
+  const name=(n=>n.charAt(0).toUpperCase()+n.slice(1))(first.toLocaleDateString('es-ES',{month:'long',year:'numeric'}));
+  return `<div class="card">
+    <div class="row between"><h3>${name}</h3><div class="row"><button class="btn small" data-act="calprev" aria-label="Mes anterior">‹</button><button class="btn small" data-act="calnext" aria-label="Mes siguiente" ${m>=today().slice(0,7)?'disabled':''}>›</button></div></div>
+    <div class="cal">${['L','M','X','J','V','S','D'].map(l=>`<span class="cl">${l}</span>`).join('')}${cells.join('')}</div>
+    <div class="row cal-legend"><span><i class="sq tr"></i>Entreno</span><span><i class="dot ok"></i>Calorías dentro</span><span><i class="dot over"></i>Más de un 10 % por encima</span></div>
+    <p class="muted" style="font-size:13px"><b style="color:var(--ink)">${tr}</b> entrenos · <b style="color:var(--ink)">${ok}</b> días dentro de calorías · <b style="color:var(--ink)">${over}</b> días por encima.</p>
+  </div>`;
+}
+function fitRate(pts){ if(pts.length<2) return null; const n=pts.length, xs=pts.map(p=>dayDiff(pts[0].d,p.d)); if(xs[n-1]<10) return null; const ys=pts.map(p=>p.y); const mx=xs.reduce((a,b)=>a+b,0)/n, my=ys.reduce((a,b)=>a+b,0)/n; const den=xs.reduce((t,x)=>t+(x-mx)**2,0); if(!den) return null; const b=xs.reduce((t,x,i)=>t+(x-mx)*(ys[i]-my),0)/den; return {rate:b*7, now:my+b*(dayDiff(pts[0].d,today())-mx)} }
+function goalLine(label,unit,cur,goal,start,rate){
+  if(goal==null||cur==null) return '';
+  const left=cur-goal, done=left<=0;
+  const pct=start!=null&&start>goal? Math.max(0,Math.min(100,(start-cur)/(start-goal)*100)) : (done?100:0);
+  let eta;
+  if(done) eta='<b class="ok-t">¡Objetivo conseguido!</b>';
+  else if(rate==null) eta='Necesito más registros para calcular cuándo llegarás.';
+  else if(rate>=-0.02) eta='Ahora mismo no estás bajando, así que no puedo estimar una fecha. Revisa el consejo de calorías.';
+  else { const wk=left/(-rate); const d=addDays(today(),Math.round(wk*7)); eta=`A tu ritmo (${fmtN(rate,2)} ${unit}/sem) llegarías hacia el <b>${fmtDate(d)} de ${d.slice(0,4)}</b>, en unas ${fmtN(Math.ceil(wk),0)} semanas.` }
+  return `<div class="goal"><div class="row between" style="align-items:baseline"><span class="label">${label}</span><span class="num">${fmtN(cur)} → <b>${fmtN(goal)} ${unit}</b>${done?'':` · faltan ${fmtN(left)} ${unit}`}</span></div>
+    <div class="progress-bar"><i style="width:${pct.toFixed(0)}%"></i></div><p style="font-size:14px;margin:0">${eta}</p></div>`;
+}
+function goalCard(){
+  const p=S.profile, gk=num(p.goalKg), gw=num(p.goalWaist);
+  if(gk==null&&gw==null) return `<div class="card"><div class="row between"><div><h3>Tu objetivo</h3><p class="muted" style="margin:0">Pon tu peso o tu cintura objetivo y te digo cuándo llegarás a tu ritmo actual.</p></div><button class="btn primary" data-tab="ajustes">Poner objetivo</button></div></div>`;
+  const tr=weightTrend(28), wp=weightPoints(); const curK=tr?tr.now:(wp.length?wp[wp.length-1].y:null);
+  const wpts=measureList().filter(m=>num(m.waist)).map(m=>({d:m.date,y:num(m.waist)})).filter(x=>dayDiff(x.d,today())<=70);
+  const wr=fitRate(wpts); const allW=measureList().filter(m=>num(m.waist)); const curW=wr?wr.now:(allW.length?num(allW[allW.length-1].waist):null);
+  return `<div class="card"><div class="row between"><h3>Tu objetivo</h3><button class="btn small ghost" data-tab="ajustes">Cambiar</button></div>
+    ${goalLine('Peso (tendencia)','kg',curK,gk,startWeight(),tr?tr.rate:null)}
+    ${goalLine('Cintura','cm',curW,gw,allW.length?num(allW[0].waist):null,wr?wr.rate:null)}
+    <p class="muted" style="font-size:13px;margin:0">La fecha se recalcula con cada pesada: es una estimación con tu ritmo de las últimas semanas, no una promesa.</p></div>`;
 }
 function lastWeightKg(){ const p=weightPoints(); return p.length?p[p.length-1].y:84.8 }
 
@@ -1317,6 +1400,8 @@ function vProgreso(){
         <div class="stat"><span class="label">Grasa estimada</span><b>${lastBF!=null?fmtN(lastBF)+' %':'—'}</b></div>
       </div>
     </div>
+    ${goalCard()}
+    ${calCard()}
     ${summaryCard(0)}
     <div class="grid2">
       <div class="card">
@@ -1388,12 +1473,47 @@ function vFotos(){
       ${byPose.length>=2?`<div class="compare">
         <figure><select id="cmpA">${byPose.map(p=>`<option value="${p.id}" ${A&&p.id===A.id?'selected':''}>${fmtDate(p.date)}</option>`).join('')}</select><img src="${esc(src(A))}" alt="Foto ${esc(photoPose)} del ${fmtDate(A.date)}"></figure>
         <figure><select id="cmpB">${byPose.map(p=>`<option value="${p.id}" ${B&&p.id===B.id?'selected':''}>${fmtDate(p.date)}</option>`).join('')}</select><img src="${esc(src(B))}" alt="Foto ${esc(photoPose)} del ${fmtDate(B.date)}"></figure>
-      </div>`:`<div class="empty">Necesitas al menos dos fotos de ${esc(photoPose)} para compararlas lado a lado.</div>`}
+      </div><div class="row"><button class="btn primary" data-act="beforeafter">Crear imagen de antes y después</button></div>`:`<div class="empty">Necesitas al menos dos fotos de ${esc(photoPose)} para compararlas lado a lado.</div>`}
     </div>
     <div class="card"><h3>Todas</h3>
       ${ph.length?`<div class="photos">${ph.map(p=>`<div class="ph"><img src="${esc(src(p))}" alt="Foto ${esc(p.pose)} del ${fmtDate(p.date)}" loading="lazy"><div class="row between"><span>${fmtDate(p.date)} · ${esc(p.pose)}</span><button class="btn small ghost ${armed==='ph'+p.id?'armed':''}" data-act="delphoto" data-id="${p.id}">${armed==='ph'+p.id?'¿Borrar?':'Borrar'}</button></div></div>`).join('')}</div>`:'<div class="empty">Sube tu primera foto de frente para tener el punto de partida.</div>'}
     </div>
   </section>`;
+}
+
+/* ---- Antes y después: una imagen para guardar o compartir ---- */
+function weightNear(d){ const wp=weightPoints(); let best=null; wp.forEach(p=>{ const g=Math.abs(dayDiff(p.d,d)); if(g<=4&&(!best||g<best.g)) best={g,y:p.y} }); return best?best.y:null }
+async function beforeAfter(btn){
+  const imgs=[...document.querySelectorAll('.compare img')]; if(imgs.length<2) return;
+  const dA=$('#cmpA')&&S.photos[$('#cmpA').value], dB=$('#cmpB')&&S.photos[$('#cmpB').value]; if(!dA||!dB) return;
+  btn.disabled=true; const lab=btn.textContent; btn.textContent='Creando…';
+  try{
+    await Promise.all(imgs.slice(0,2).map(i=>i.complete&&i.naturalWidth>1?0:new Promise(r=>{i.onload=r;i.onerror=r;setTimeout(r,4000)})));
+    try{ await document.fonts.load('800 60px "Barlow Condensed"') }catch(e){}
+    const W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d');
+    g.fillStyle='#0F1312'; g.fillRect(0,0,W,H);
+    const pad=36, gap=20, top=150, ph=H-top-250, pw=(W-pad*2-gap)/2;
+    const draw=(img,x)=>{ const r=Math.max(pw/img.naturalWidth, ph/img.naturalHeight), w=img.naturalWidth*r, h=img.naturalHeight*r;
+      g.save(); g.beginPath(); g.rect(x,top,pw,ph); g.clip(); g.drawImage(img, x+(pw-w)/2, top+(ph-h)/2, w, h); g.restore() };
+    draw(imgs[0],pad); draw(imgs[1],pad+pw+gap);
+    const disp='"Barlow Condensed","Arial Narrow",sans-serif', mono='"IBM Plex Mono",Menlo,monospace';
+    g.fillStyle='#E5EBE9'; g.font='800 64px '+disp; g.textBaseline='alphabetic'; g.fillText('ANTES', pad, 112); g.textAlign='right'; g.fillText('AHORA', W-pad, 112); g.textAlign='left';
+    g.fillStyle='#E8574D'; g.fillRect(W-pad-120, 126, 120, 8);
+    const kA=weightNear(dA.date), kB=weightNear(dB.date);
+    const lbl=(x,p,k)=>{ g.fillStyle='#93A09C'; g.font='500 30px '+mono; g.fillText(fmtDate(p.date)+' '+p.date.slice(0,4), x, top+ph+48); if(k!=null){ g.fillStyle='#E5EBE9'; g.font='800 54px '+disp; g.fillText(fmtN(k)+' KG', x, top+ph+110) } };
+    lbl(pad,dA,kA); lbl(pad+pw+gap,dB,kB);
+    const wks=Math.round(dayDiff(dA.date,dB.date)/7);
+    g.fillStyle='#E5EBE9'; g.font='700 40px '+disp;
+    const sum=(kA!=null&&kB!=null?((kB-kA)>0?'+':'')+fmtN(kB-kA)+' KG EN ':'')+(wks>=1?wks+(wks===1?' SEMANA':' SEMANAS'):dayDiff(dA.date,dB.date)+' DÍAS');
+    g.fillText(sum, pad, H-44);
+    g.textAlign='right'; g.fillStyle='#93A09C'; g.font='700 34px '+disp; g.fillText('ENTRENAMIENTO', W-pad, H-44); g.fillStyle='#E8574D'; g.fillRect(W-pad-150, H-30, 150, 6); g.textAlign='left';
+    const blob=await new Promise((res,rej)=>{ try{ c.toBlob(b=>b?res(b):rej(new Error('vacío')),'image/jpeg',.9) }catch(e){ rej(e) } });
+    let dl=null; try{ dl=await window.claude?.use('downloads') }catch(e){}
+    if(!dl){ toast('Las descargas no están disponibles en esta vista'); return }
+    await dl.save({filename:'antes-y-despues-'+photoPose+'-'+dB.date+'.jpg', data:blob});
+    toast('Imagen lista: elige «Guardar imagen» para llevarla a Fotos');
+  }catch(e){ console.error(e); toast('No se pudo crear la imagen') }
+  finally{ btn.disabled=false; btn.textContent=lab }
 }
 
 /* ============ RENDER ============ */
@@ -1520,6 +1640,8 @@ document.addEventListener('click', async e=>{
     const o=await estimateMeal(m.text); if(o){ await put('meals',b.dataset.id,{...m,kcal:o.kcal,p:o.p,c:o.c,f:o.f,est:true}); toast('Calculado: '+o.kcal+' kcal') } else { b.disabled=false; b.textContent='Calcular' } return }
   if(act==='pdf'){ makePDF(b); return }
   if(act==='timerstop'){ stopTimer(); return }
+  if(act==='calprev'||act==='calnext'){ const m=calMonth||today().slice(0,7); const [y,mo]=m.split('-').map(Number); const d=new Date(y,mo-1+(act==='calnext'?1:-1),1); calMonth=d.getFullYear()+'-'+z(d.getMonth()+1); render(); return }
+  if(act==='beforeafter'){ beforeAfter(b); return }
   if(act==='plus30'){ if(timer){ timer.end+=30000; timer.total+=30; timer.beeped=false; restNotif(timer.end); timer.tick() } return }
   if(act==='timermin'||act==='timermax'){ if(timer){ timer.min=act==='timermin'; $('#timerSlot').innerHTML=''; timer.tick() } return }
   if(act==='quick'){ const m=MEALS[b.dataset.slot].find(x=>x.k===b.dataset.k); const id=uid(); const h=b.dataset.half==='1'; const r=v=>h?Math.round(v/2):v;
@@ -1621,7 +1743,7 @@ document.addEventListener('submit', async e=>{
     const v=parseInt(String(raw||'').replace(/\D/g,''),10); if(!d||d>=today()){ toast('Elige un día anterior a hoy'); return } if(isNaN(v)){ toast('Escribe los pasos de ese día'); return }
     f.reset(); const cur=S.daily[d]||{}; await put('daily',d,{...cur,date:d,steps:v}); toast('Pasos del '+fmtDate(d)+' guardados: '+fmtN(v,0)); }
   if(f.id==='fSteps'){ const v=parseInt(($('#stepsIn').value||'').replace(/\D/g,''),10); const t=today(); const cur=S.daily[t]||{}; if(!v&&v!==0){ toast('Escribe tus pasos'); return } await put('daily',t,{...cur,date:t,steps:v}); toast('Pasos guardados'); }
-  if(f.id==='fProfile'){ await put('profile','main',{...S.profile, height:num($('#pfH').value)||175,birth:$('#pfB').value||DEFAULT_PROFILE.birth,start:$('#pfS').value||DEFAULT_PROFILE.start,sex:'h'}); toast('Datos guardados'); }
+  if(f.id==='fProfile'){ await put('profile','main',{...S.profile, height:num($('#pfH').value)||175,birth:$('#pfB').value||DEFAULT_PROFILE.birth,start:$('#pfS').value||DEFAULT_PROFILE.start,sex:'h',goalKg:num($('#pfGK').value),goalWaist:num($('#pfGW').value)}); toast('Datos guardados'); }
   if(document.activeElement) document.activeElement.blur(); scheduleRender();
 });
 async function makePDF(btn){

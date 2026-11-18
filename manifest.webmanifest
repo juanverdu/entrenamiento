@@ -1,6 +1,6 @@
 {
-  "name": "Libreta de Hierro",
-  "short_name": "Libreta",
+  "name": "Entrenamiento",
+  "short_name": "Entreno",
   "description": "Entrenos, comidas, peso y progreso.",
   "lang": "es",
   "start_url": "./",

@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Libreta">
+<meta name="apple-mobile-web-app-title" content="Entreno">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<title>Libreta de Hierro</title>
+<title>Entrenamiento</title>
 <style>
 :root{padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;-webkit-text-size-adjust:100%}
@@ -357,7 +357,7 @@ input[type="date"]::-webkit-datetime-edit{padding:0}
 
 <header class="top">
   <div class="wrap">
-    <div class="brand"><span class="plate" aria-hidden="true">LH</span>Libreta de Hierro</div>
+    <div class="brand"><span class="plate" aria-hidden="true">E</span>Entrenamiento</div>
     <nav class="tabs" role="tablist">
       <button data-tab="hoy" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12"/></svg><span>Hoy</span></button>
       <button data-tab="plan" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Plan</span></button>
@@ -368,7 +368,7 @@ input[type="date"]::-webkit-datetime-edit{padding:0}
   </div>
 </header>
 <main class="wrap" id="app">
-  <section class="panel"><div class="card"><h3>Cargando tu libreta</h3><p class="muted">Conectando con tus registros de peso, comidas y entrenos.</p></div></section>
+  <section class="panel"><div class="card"><h3>Cargando</h3><p class="muted">Conectando con tus registros de peso, comidas y entrenos.</p></div></section>
 </main>
 <div id="timerSlot"></div>
 <div id="toastSlot"></div>
@@ -922,7 +922,7 @@ function loadZX(){ if(window.ZXing) return Promise.resolve(); if(zxP) return zxP
   zxP=new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js'; sc.onload=()=>res(); sc.onerror=()=>{ zxP=null; rej(new Error('zxing')) }; document.head.appendChild(sc) }); return zxP }
 async function toCanvas(file,max){ const bmp=await createImageBitmap(file); const k=Math.min(1,max/Math.max(bmp.width,bmp.height)); const c=document.createElement('canvas'); c.width=Math.round(bmp.width*k); c.height=Math.round(bmp.height*k); c.getContext('2d').drawImage(bmp,0,0,c.width,c.height); return c }
 async function sampleWithImage(){ let sm=null; try{ sm=await window.claude?.use('sample') }catch(e){} if(!sm) return null; const lim=await sm.limits().catch(()=>null); return lim&&lim.images?sm:null }
-function sampleErr(e){ const c=e&&e.code; toast(c==='not_granted'?(((window.NATIVE_APP||window.WEB_APP)&&e.message)||'Necesitas permitir que la libreta consulte a Claude.'):c==='rate_limited'?'Demasiadas consultas seguidas. Espera un poco.':'Claude no ha podido leer la foto. Prueba con otra más nítida.') }
+function sampleErr(e){ const c=e&&e.code; toast(c==='not_granted'?(((window.NATIVE_APP||window.WEB_APP)&&e.message)||'Necesitas permitir que la app consulte a Claude.'):c==='rate_limited'?'Demasiadas consultas seguidas. Espera un poco.':'Claude no ha podido leer la foto. Prueba con otra más nítida.') }
 async function decodeBarcode(file){
   let cv=null; try{ cv=await toCanvas(file,1600) }catch(e){}
   if(cv && 'BarcodeDetector' in window){ try{ const det=new window.BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']}); const r=await det.detect(cv); if(r&&r[0]&&r[0].rawValue) return r[0].rawValue }catch(e){} }
@@ -1029,7 +1029,7 @@ Comida: ${text}`;
     const o={kcal:n(r&&r.kcal),p:n(r&&r.p),c:n(r&&r.c),f:n(r&&r.f),nota:r&&typeof r.nota==='string'?r.nota.slice(0,200):'', desc:r&&typeof r.descripcion==='string'?r.descripcion.slice(0,300):''};
     if(o.kcal==null){ toast('No he podido calcularla. Prueba a describirla con más detalle.'); return null } return o }
   catch(e){ const c=e&&e.code;
-    toast(c==='not_granted'?(((window.NATIVE_APP||window.WEB_APP)&&e.message)||'Necesitas permitir que la libreta consulte a Claude para calcular calorías.'):c==='rate_limited'?'Demasiadas consultas seguidas. Espera un poco y vuelve a probar.':c==='refused'?'No he podido calcular esa comida.':'No se pudo calcular ahora. Vuelve a probar en un momento.'); return null }
+    toast(c==='not_granted'?(((window.NATIVE_APP||window.WEB_APP)&&e.message)||'Necesitas permitir que la app consulte a Claude para calcular calorías.'):c==='rate_limited'?'Demasiadas consultas seguidas. Espera un poco y vuelve a probar.':c==='refused'?'No he podido calcular esa comida.':'No se pudo calcular ahora. Vuelve a probar en un momento.'); return null }
 }
 
 function creaStart(){ const ds=Object.values(S.daily).filter(x=>x.creatine).map(x=>x.date).sort(); return ds[0]||null }
